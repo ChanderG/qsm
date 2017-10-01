@@ -1,0 +1,74 @@
+#!/bin/bash
+
+command=$1
+
+# Add a new series file
+function add(){
+  name=$1
+  :> patches/$name.series
+}
+
+# List existing series files
+function list(){
+  ls -1 patches/*.series
+}
+
+# Current active series name
+function curr(){
+  basename $(readlink -f patches/series) .series
+}
+
+# Switch to a different series file
+function switch(){
+  name=$1
+  if [ -e patches/series ]; then 
+    quilt applied &>/dev/null
+    if [ $? == 0 ]; then
+      echo "Patches applied in this series. Cannot switch."
+      return
+    fi
+  fi
+  ln -sf $PWD/patches/$name.series patches/series
+}
+
+# Delete a series file by name
+function delete(){
+  name=$1
+  # if currently applied branch
+  if [ "$name" == "$(curr)" ]; then
+    if [ -e patches/series ]; then 
+      quilt applied &>/dev/null
+      if [ $? == 0 ]; then
+	echo "Patches applied in this series. Cannot delete."
+	return
+      fi
+    fi
+  fi
+  rm patches/$name.series
+}
+
+function helpfun(){
+  echo "qsm - Quilt Series Manager"
+
+  echo ""
+  echo "Commands: "
+  echo "  add <series> - add a new series"
+  echo "  list - list all series names"
+  echo "  curr - print currently active series"
+  echo "  switch <series> - switch to a different series"
+  echo "  delete <series> - delete a series"
+}
+
+if [ "$command" == "add" ]; then
+  add $2
+elif [ "$command" == "list" ]; then
+  list
+elif [ "$command" == "curr" ]; then
+  curr
+elif [ "$command" == "switch" ]; then
+  switch $2
+elif [ "$command" == "delete" ]; then
+  delete $2
+else
+  helpfun
+fi
