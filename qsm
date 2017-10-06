@@ -47,6 +47,16 @@ function delete(){
   rm patches/$name.series
 }
 
+# Meta information associated with a series
+function meta(){
+  name=$1
+  if [ "$name" == "" ]; then
+    name="$(curr)"
+  fi
+
+  $EDITOR patches/$name.meta
+}
+
 function helpfun(){
   echo "qsm - Quilt Series Manager"
 
@@ -57,6 +67,7 @@ function helpfun(){
   echo "  curr - print currently active series"
   echo "  switch <series> - switch to a different series"
   echo "  delete <series> - delete a series"
+  echo "  meta <series> - display metafile of the current series"
 }
 
 if [ "$command" == "add" ]; then
@@ -69,6 +80,8 @@ elif [ "$command" == "switch" ]; then
   switch $2
 elif [ "$command" == "delete" ]; then
   delete $2
+elif [ "$command" == "meta" ]; then
+  meta $2
 else
   helpfun
 fi
