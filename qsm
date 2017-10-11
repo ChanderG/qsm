@@ -2,6 +2,24 @@
 
 command=$1
 
+### Helpers
+
+# IsWorkdirClean - is the workdir clean => no patch in current series applied.
+# Returns 0 if workdir is clean
+function IsWorkdirClean(){
+  if [ -e patches/series ]; then 
+    quilt applied &>/dev/null
+    if [ $? == 0 ]; then
+      echo "Patches applied in this series."
+      return 1
+    fi
+    # no patch applied in this series
+    return 0
+  fi
+  # no series file
+  return 0
+}
+
 # Add a new series file
 function add(){
   name=$1
@@ -21,12 +39,10 @@ function curr(){
 # Switch to a different series file
 function switch(){
   name=$1
-  if [ -e patches/series ]; then 
-    quilt applied &>/dev/null
-    if [ $? == 0 ]; then
-      echo "Patches applied in this series. Cannot switch."
+  IsWorkdirClean
+  if [ $? == 1 ]; then
+      echo "Cannot switch."
       return
-    fi
   fi
   ln -sf $PWD/patches/$name.series patches/series
 }
@@ -36,12 +52,10 @@ function delete(){
   name=$1
   # if currently applied branch
   if [ "$name" == "$(curr)" ]; then
-    if [ -e patches/series ]; then 
-      quilt applied &>/dev/null
-      if [ $? == 0 ]; then
-	echo "Patches applied in this series. Cannot delete."
+    IsWorkdirClean
+    if [ $? == 1 ]; then
+	echo "Cannot delete."
 	return
-      fi
     fi
   fi
   rm patches/$name.series
@@ -57,8 +71,22 @@ function meta(){
   $EDITOR patches/$name.meta
 }
 
+# Gitapply the current series
+# Apply and index patches in the current series in order 
+function gitapply(){
+  IsWorkdirClean
+  if [ $? == 1 ]; then
+    echo "Cannot involve git now."
+    return
+  fi
+  while read patch; do
+    echo "Applying patch $patch:"
+    git apply --index patches/$patch
+  done < patches/series
+}
+
 function helpfun(){
-  echo "qsm - Quilt Series Manager"
+  echo "qsm - Quilt Series Manager with additional git related utils"
 
   echo ""
   echo "Commands: "
@@ -68,6 +96,10 @@ function helpfun(){
   echo "  switch <series> - switch to a different series"
   echo "  delete <series> - delete a series"
   echo "  meta <series> - display metafile of the current series"
+
+  echo ""
+  echo "  git utils"
+  echo "    gitapply - apply and index current series"
 }
 
 if [ "$command" == "add" ]; then
@@ -82,6 +114,8 @@ elif [ "$command" == "delete" ]; then
   delete $2
 elif [ "$command" == "meta" ]; then
   meta $2
+elif [ "$command" == "gitapply" ]; then
+  gitapply
 else
   helpfun
 fi
