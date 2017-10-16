@@ -85,6 +85,11 @@ function gitapply(){
   done < patches/series
 }
 
+# Switch the current series using dmenu
+function dmenu_switch(){
+  switch $(basename $(list | dmenu -l 5) .series)
+}
+
 function helpfun(){
   echo "qsm - Quilt Series Manager with additional git related utils"
 
@@ -100,6 +105,10 @@ function helpfun(){
   echo ""
   echo "  git utils"
   echo "    gitapply - apply and index current series"
+
+  echo ""
+  echo "  dmenu utils"
+  echo "    ds - switch patch using dmenu"
 }
 
 if [ "$command" == "add" ]; then
@@ -116,6 +125,8 @@ elif [ "$command" == "meta" ]; then
   meta $2
 elif [ "$command" == "gitapply" ]; then
   gitapply
+elif [ "$command" == "ds" ]; then
+  dmenu_switch
 else
   helpfun
 fi
