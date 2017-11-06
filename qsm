@@ -71,6 +71,12 @@ function meta(){
   $EDITOR patches/$name.meta
 }
 
+# pop all patches in the current series
+function popall(){
+  num_patches="$(quilt applied | wc -l)"
+  for((n=0;n<$num_patches;n++)); do quilt pop; done
+}
+
 # Gitapply the current series
 # Apply and index patches in the current series in order 
 function gitapply(){
@@ -101,6 +107,7 @@ function helpfun(){
   echo "  switch <series> - switch to a different series"
   echo "  delete <series> - delete a series"
   echo "  meta <series> - display metafile of the current series"
+  echo "  popall - pop all applied patches"
 
   echo ""
   echo "  git utils"
@@ -123,6 +130,8 @@ elif [ "$command" == "delete" ]; then
   delete $2
 elif [ "$command" == "meta" ]; then
   meta $2
+elif [ "$command" == "popall" ]; then
+  popall
 elif [ "$command" == "gitapply" ]; then
   gitapply
 elif [ "$command" == "ds" ]; then
